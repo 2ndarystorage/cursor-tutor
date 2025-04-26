@@ -19,93 +19,94 @@ import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 
 function Square({ value, onClick }) {
-  const style = {
-    height: '50px', // 高さを指定
-    width: '50px',  // 幅を指定
-    fontSize: '24px' // フォントサイズを大きくする
-  };
-
   return (
-    <button style={style} className="square" onClick={onClick}>
+    <button
+      style={{
+        width: "60px",
+        height: "60px",
+        fontSize: "24px",
+        margin: "2px",
+      }}
+      onClick={onClick}
+    >
       {value}
     </button>
   );
 }
 
-function Board() {
-  const [squares, setSquares] = useState(Array(16).fill(null));
-  const [xIsNext, setXIsNext] = useState(true);
-
-  function handleClick(i) {
-    const squaresCopy = squares.slice();
-    if (squaresCopy[i]) return;
-    squaresCopy[i] = xIsNext ? 'X' : 'O';
-    setSquares(squaresCopy);
-    setXIsNext(!xIsNext);
-  }
-
-  function renderSquare(i) {
-    return <Square value={squares[i]} onClick={() => handleClick(i)} />;
-  }
-
-  // CSSスタイルを追加して、コマ枠の表示を整える
-  const boardStyle = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
-    gap: '10px'
-  };
-
-  return (
-    <div style={boardStyle}>
-      {Array.from({ length: 16 }, (_, i) => renderSquare(i))}
-    </div>
-  );
-}
-
 function calculateWinner(squares) {
   const lines = [
-    [0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15], // 横
-    [0, 4, 8, 12], [1, 5, 9, 13], [2, 6, 10, 14], [3, 7, 11, 15], // 縦
-    [0, 5, 10, 15], [3, 6, 9, 12]  // 斜め
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
   ];
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c, d] = lines[i];
-    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c] && squares[a] === squares[d]) {
+  for (let line of lines) {
+    const [a, b, c] = line;
+    if (
+      squares[a] &&
+      squares[a] === squares[b] &&
+      squares[a] === squares[c]
+    ) {
       return squares[a];
     }
   }
   return null;
 }
 
-function Game() {
-  const [squares, setSquares] = useState(Array(16).fill(null));
+export default function TicTacToe() {
+  const [squares, setSquares] = useState(Array(9).fill(null));
   const [xIsNext, setXIsNext] = useState(true);
+
   const winner = calculateWinner(squares);
+  let status;
+  if (winner) {
+    status = `勝者: ${winner}`;
+  } else if (squares.every(Boolean)) {
+    status = "引き分けです";
+  } else {
+    status = `次の手番: ${xIsNext ? "X" : "O"}`;
+  }
 
   function handleClick(i) {
-    const squaresCopy = squares.slice();
-    if (squaresCopy[i] || winner) return;
-    squaresCopy[i] = xIsNext ? 'X' : 'O';
-    setSquares(squaresCopy);
+    if (squares[i] || winner) return;
+    const nextSquares = squares.slice();
+    nextSquares[i] = xIsNext ? "X" : "O";
+    setSquares(nextSquares);
     setXIsNext(!xIsNext);
   }
 
-  function renderSquare(i) {
-    return <Square value={squares[i]} onClick={() => handleClick(i)} />;
+  function handleReset() {
+    setSquares(Array(9).fill(null));
+    setXIsNext(true);
   }
 
-  const boardStyle = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
-    gap: '10px'
-  };
-
   return (
-    <div className="game">
-      <div className="game-board" style={boardStyle}>
-        {Array.from({ length: 16 }, (_, i) => renderSquare(i))}
+    <div>
+      <div style={{ marginBottom: "10px" }}>{status}</div>
+      <div>
+        {[0, 1, 2].map((row) => (
+          <div key={row} style={{ display: "flex" }}>
+            {[0, 1, 2].map((col) => {
+              const idx = row * 3 + col;
+              return (
+                <Square
+                  key={idx}
+                  value={squares[idx]}
+                  onClick={() => handleClick(idx)}
+                />
+              );
+            })}
+          </div>
+        ))}
       </div>
-      {winner && <div className="winner">勝者: {winner}</div>}
+      <button style={{ marginTop: "10px" }} onClick={handleReset}>
+        リセット
+      </button>
     </div>
   );
 }
@@ -118,7 +119,7 @@ function App() {
       {!start ? (
         <button onClick={() => setStart(true)}>ゲームを始める</button>
       ) : (
-        <Game />
+        <TicTacToe />
       )}
     </div>
   );
@@ -130,3 +131,25 @@ root.render(
     <App />
   </React.StrictMode>
 );
+// 勝利条件を判定する関数
+function calculateWinner(squares) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5], 
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+  ];
+
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a];
+    }
+  }
+  return null;
+}
+
